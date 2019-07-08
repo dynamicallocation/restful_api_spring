@@ -2,6 +2,7 @@ package com.example.demo;
 
 import java.util.List;
 
+import org.springframework.hateoas.Resource;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.ws.rs.Path;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 class EmployeeController {
@@ -32,11 +36,16 @@ class EmployeeController {
         return repository.save(newEmployee);
     }
 
-    @GetMapping("/employees/{id}")
-    Employee one(@PathVariable Long id){
 
-        return repository.findById(id)
+    @GetMapping("/employees/{id}")
+    Resource<Employee> one(@PathVariable Long id) {
+
+        Employee employee = repository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id));
+
+        return new Resource<>(employee,
+                linkTo(methodOn(EmployeeController.class).one(id)).withSelfRel(),
+                linkTo(methodOn(EmployeeController.class).all()).withRel("employees"));
     }
 
     @PutMapping("/employee/{id}")
@@ -58,4 +67,6 @@ class EmployeeController {
     void deleteEmployee(@PathVariable Long id){
         repository.deleteById(id);
     }
+
+
 }
